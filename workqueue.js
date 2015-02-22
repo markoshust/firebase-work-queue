@@ -8,49 +8,69 @@
  * @param queueRef A Firebase reference to the list of work items
  * @param processingCallback The callback to be called for each work item
  */
+var Firebase = require('firebase');
+
 function WorkQueue(queueRef, processingCallback) {
-  this.processingCallback = processingCallback;
-  this.busy = false;
-  queueRef.limitToFirst(1).on("child_added", function(snap) {
-    this.currentItem = snap.ref();
-    this.tryToProcess();
-  }, this);
+    this.processingCallback = processingCallback;
+    this.busy = false;
+
+    queueRef.orderByChild("status").limitToFirst(1).on("child_added", function(snapshot) {
+        this.currentItem = snapshot.ref();
+        this.tryToProcess();
+    }, this);
 }
 
 WorkQueue.prototype.readyToProcess = function() {
-  this.busy = false;
-  this.tryToProcess();
-}
+    this.busy = false;
+    this.tryToProcess();
+};
 
 WorkQueue.prototype.tryToProcess = function() {
-  if(!this.busy && this.currentItem) {
+    if (this.busy || !this.currentItem) return;
+
+    var dataToProcess = null,
+        self = this,
+        toProcess = this.currentItem;
+
     this.busy = true;
-    var dataToProcess = null;
-    var self = this;
-    var toProcess = this.currentItem;
     this.currentItem = null;
+
     toProcess.transaction(function(theItem) {
-      dataToProcess = theItem;
-      if(theItem && !theItem.status) {
-        theItem.status = 'processing';
-        return theItem;
-      } else {
-        return;
-      }
-    }, function(error, committed, snapshot, dummy) {
-       if(error) throw error;
-       if(committed) {
-         console.log("Claimed a job.");
-	 self.processingCallback(dataToProcess, function() {
-	   snapshot.ref().remove();
-	   self.readyToProcess();
-	 });
-       } else {
-         console.log("Another worker beat me to the job.");
-	 self.readyToProcess();
-       }
+        dataToProcess = theItem;
+
+        if (theItem && !theItem.status) {
+            theItem.status = "processing";
+            theItem.statusChanged = Firebase.ServerValue.TIMESTAMP;
+
+            return theItem;
+        }
+    }, function(error, committed, snapshot) {
+        if (error) throw error;
+
+        if (!committed) {
+            console.log("Another worker beat me to the job.");
+            self.readyToProcess();
+            return;
+        }
+
+        var ref = snapshot.ref();
+
+        console.log("Claimed a job.");
+
+        self.processingCallback(dataToProcess, function(errorMessage) {
+            if (errorMessage) {
+                ref.update({
+                    status: "error",
+                    errorMessage: errorMessage,
+                    statusChanged: Firebase.ServerValue.TIMESTAMP
+                });
+            } else {
+                ref.remove();
+            }
+
+            self.readyToProcess();
+        });
     });
-  }
-}
+};
 
 module.exports = WorkQueue;
