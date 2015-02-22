@@ -31,16 +31,18 @@ WorkQueue.prototype.tryToProcess = function() {
     this.currentItem = null;
     toProcess.transaction(function(theItem) {
       dataToProcess = theItem;
-      if(theItem) {
-        return null;
+      if(theItem && !theItem.status) {
+        theItem.status = 'processing';
+        return theItem;
       } else {
         return;
       }
     }, function(error, committed, snapshot, dummy) {
-       if (error) throw error;
+       if(error) throw error;
        if(committed) {
          console.log("Claimed a job.");
 	 self.processingCallback(dataToProcess, function() {
+	   snapshot.ref().remove();
 	   self.readyToProcess();
 	 });
        } else {
