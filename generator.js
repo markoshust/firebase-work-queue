@@ -1,6 +1,6 @@
-var Firebase = require("firebase"),
+var Firebase = require('firebase'),
     newWorkPeriod = 700,
-    workItems = new Firebase("https://workqueue.firebaseio-demo.com/"),
+    workItems = new Firebase('https://YOUR-INSTANCE.firebaseio.com/'),
     i = 0;
 
 setInterval(function() {

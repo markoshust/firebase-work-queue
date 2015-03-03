@@ -14,7 +14,7 @@ function WorkQueue(queueRef, processingCallback) {
     this.processingCallback = processingCallback;
     this.busy = false;
 
-    queueRef.orderByChild("status").limitToFirst(1).on("child_added", function(snapshot) {
+    queueRef.orderByChild('status').limitToFirst(1).on('child_added', function(snapshot) {
         this.currentItem = snapshot.ref();
         this.tryToProcess();
     }, this);
@@ -39,7 +39,7 @@ WorkQueue.prototype.tryToProcess = function() {
         dataToProcess = theItem;
 
         if (theItem && !theItem.status) {
-            theItem.status = "processing";
+            theItem.status = 'processing';
             theItem.statusChanged = Firebase.ServerValue.TIMESTAMP;
 
             return theItem;
@@ -48,19 +48,19 @@ WorkQueue.prototype.tryToProcess = function() {
         if (error) throw error;
 
         if (!committed) {
-            console.log("Another worker beat me to the job.");
+            console.log('Another worker beat me to the job.');
             self.readyToProcess();
             return;
         }
 
         var ref = snapshot.ref();
 
-        console.log("Claimed a job.");
+        console.log('Claimed a job.');
 
         self.processingCallback(dataToProcess, function(errorMessage) {
             if (errorMessage) {
                 ref.update({
-                    status: "error",
+                    status: 'error',
                     errorMessage: errorMessage,
                     statusChanged: Firebase.ServerValue.TIMESTAMP
                 });
