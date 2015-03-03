@@ -1,14 +1,20 @@
 var Firebase = require('firebase'),
-    newWorkPeriod = 700,
-    workItems = new Firebase('https://YOUR-INSTANCE.firebaseio.com/'),
-    i = 0;
+    workqueueRef = new Firebase('https://YOUR-INSTANCE.firebaseio.com/workqueue'),
+    i = 0,
+    createRecord = function() {
+        workqueueRef.push({
+            number: i,
+            time: Math.floor(Math.random() * 2000),
+            createdAt: Firebase.ServerValue.TIMESTAMP
+        });
 
-setInterval(function() {
-    workItems.push({
-        number: i,
-        time: Math.floor(Math.random()*2000),
-        createdAt: Firebase.ServerValue.TIMESTAMP
-    });
+        i++; 
+    };
 
-    i++;
-}, newWorkPeriod);
+(function loop() {
+    setTimeout(function() {
+        createRecord();
+        loop();
+    }, Math.floor(Math.random() * 1000)); // Randomize between 0 and 1 seconds
+}());
+

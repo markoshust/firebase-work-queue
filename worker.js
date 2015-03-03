@@ -1,6 +1,6 @@
 var Firebase = require('firebase'),
     WorkQueue = require('./workqueue.js'),
-    itemsRef = new Firebase('https://YOUR-INSTANCE.firebaseio.com/'),
+    workqueueRef = new Firebase('https://YOUR-INSTANCE.firebaseio.com/workqueue'),
     errorMessage = null;
 
 var workCallback = function(data, whenFinished) {
@@ -20,4 +20,4 @@ var workCallback = function(data, whenFinished) {
     }, data.time);
 };
 
-new WorkQueue(itemsRef, workCallback);
+new WorkQueue(workqueueRef, workCallback);
