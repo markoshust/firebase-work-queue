@@ -22,3 +22,8 @@ You can start as many workers or generators as you like. The WorkQueue uses tran
 License
 -------
 [MIT](http://firebase.mit-license.org)
+
+
+Deprecated
+==========
+Firebase has since released a work queue script that is much more advanced than their previous one and this one. I urge everyone to use that one instead: https://github.com/firebase/firebase-queue
